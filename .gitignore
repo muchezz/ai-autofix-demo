@@ -1,0 +1,22 @@
+# Secrets / env
+.env
+*.env
+!.env.example
+
+# Node
+node_modules/
+npm-debug.log*
+package-lock.json
+
+# n8n / docker volumes (if ever bind-mounted locally)
+.n8n/
+
+# CI artifacts
+app/test_output.log
+app/payload.json
+
+# OS / editor cruft
+.DS_Store
+*.swp
+.vscode/
+.idea/

@@ -1,0 +1,61 @@
+{
+  "name": "AI Auto-Fix",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ai-autofix",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "webhook-node",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [260, 300],
+      "webhookId": "ai-autofix"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// See n8n/brain.js in the repo for the full, commented source.\n// Paste that file's contents here (n8n Code nodes don't support external\n// file imports) -- this stub is a placeholder marker only.\nthrow new Error('Paste the contents of n8n/brain.js into this Code node.');"
+      },
+      "id": "brain-node",
+      "name": "Brain (Claude + GitHub)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $env.AUTOFIX_FROM_EMAIL }}",
+        "toEmail": "={{ $env.AUTOFIX_TO_EMAIL }}",
+        "subject": "=AI Auto-Fix opened a PR: {{ $json.pr_title }}",
+        "text": "=Repo: {{ $json.repo }}\nBranch: {{ $json.branch_name }}\nPR: {{ $json.pr_url }}\nOriginal failing run: {{ $json.run_url }}\n\nThis PR was opened automatically and has NOT been merged. Please review before merging."
+      },
+      "id": "notify-node",
+      "name": "Notify (SMTP)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [780, 300],
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_WITH_YOUR_SMTP_CREDENTIAL_ID",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Brain (Claude + GitHub)", "type": "main", "index": 0 }]]
+    },
+    "Brain (Claude + GitHub)": {
+      "main": [[{ "node": "Notify (SMTP)", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
