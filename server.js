@@ -1,8 +1,7 @@
 const express = require('express');
 
 function add(a, b) {
-  // Bug: no numeric coercion, so add(2, '3') returns '23' instead of 5.
-  return a + b;
+  return Number(a) + Number(b);
 }
 
 function createApp() {
