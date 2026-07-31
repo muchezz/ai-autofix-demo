@@ -1,10 +1,8 @@
 name: CI
-
 on:
   push:
     branches: [main]
   workflow_dispatch: {}
-
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -12,34 +10,25 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-
       - name: Install dependencies
-        working-directory: app
         run: npm install
-
       - name: Run tests
         id: run_tests
-        working-directory: app
         run: node --test 2>&1 | tee test_output.log
         continue-on-error: true
-
       - name: Check test result
         id: check
-        working-directory: app
         run: |
           if grep -q "fail [1-9]" test_output.log; then
             echo "failed=true" >> "$GITHUB_OUTPUT"
           else
             echo "failed=false" >> "$GITHUB_OUTPUT"
           fi
-
       - name: Notify AI Auto-Fix on failure
         if: steps.check.outputs.failed == 'true'
-        working-directory: app
         env:
           N8N_WEBHOOK_URL: ${{ secrets.N8N_WEBHOOK_URL }}
           AUTOFIX_WEBHOOK_SECRET: ${{ secrets.AUTOFIX_WEBHOOK_SECRET }}
@@ -47,7 +36,6 @@ jobs:
           LOG=$(cat test_output.log)
           SERVER_JS=$(cat server.js)
           SERVER_TEST_JS=$(cat server.test.js)
-
           jq -n \
             --arg owner "${{ github.repository_owner }}" \
             --arg repo "${{ github.event.repository.name }}" \
@@ -65,16 +53,14 @@ jobs:
               run_url: $run_url,
               log: $log,
               files: [
-                { path: "app/server.js", content: $server_js },
-                { path: "app/server.test.js", content: $server_test_js }
+                { path: "server.js", content: $server_js },
+                { path: "server.test.js", content: $server_test_js }
               ]
             }' > payload.json
-
           curl -sf -X POST "$N8N_WEBHOOK_URL" \
             -H "content-type: application/json" \
             -H "x-autofix-secret: $AUTOFIX_WEBHOOK_SECRET" \
             --data @payload.json
-
       - name: Fail the job if tests failed
         if: steps.check.outputs.failed == 'true'
         run: exit 1
